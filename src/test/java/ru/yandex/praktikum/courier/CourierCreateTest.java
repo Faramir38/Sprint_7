@@ -1,21 +1,15 @@
 package ru.yandex.praktikum.courier;
 
 import io.qameta.allure.junit4.DisplayName;
-import io.restassured.RestAssured;
 import io.restassured.response.Response;
-import org.junit.Before;
 import org.junit.Test;
-import ru.yandex.praktikum.SamokatConst;
 
 
+import static org.apache.http.HttpStatus.*;
 import static org.hamcrest.Matchers.equalTo;
 
-public class CourierCreateTest {
+public class CourierCreateTest extends CourierBaseTest {
 
-    @Before
-    public void setUp() {
-        RestAssured.baseURI = SamokatConst.SAMOKAT_URL;
-    }
 
     //курьера возможно создать (проверяем что после логина созданного курьера, возвращается код 200)
     @Test
@@ -24,13 +18,13 @@ public class CourierCreateTest {
         //Arrange
         Courier courier = CourierGenerator.fullRandom();
         //Act
-        CourierClient.create(courier);
-        Response response = CourierClient.login(courier);
+        if (CourierClient.createCourier(courier).statusCode() == SC_CREATED) {
+            setCourierToDelete(courier);
+        }
+        Response response = CourierClient.loginCourier(courier);
         //Assert
-        response.then().statusCode(200);
+        response.then().statusCode(SC_OK);
 
-        CourierId id = response.body().as(CourierId.class);
-        CourierClient.delete(id.getId());
     }
 
     //нельзя создать двух одинаковых курьеров (проверяем, что после повторного создания курьера возвращается код 409)
@@ -40,14 +34,12 @@ public class CourierCreateTest {
         //Arrange
         Courier courier = CourierGenerator.fullRandom();
         //Act
-        CourierClient.create(courier);
-        CourierClient.create(courier).then()
+        if (CourierClient.createCourier(courier).statusCode() == SC_CREATED) {
+            setCourierToDelete(courier);
+        }
+        CourierClient.createCourier(courier).then()
                 //Assert
-                .statusCode(409).and().assertThat().body("message", equalTo("Этот логин уже используется"));
-
-        Response response = CourierClient.login(courier);
-        CourierId id = response.body().as(CourierId.class);
-        CourierClient.delete(id.getId());
+                .statusCode(SC_CONFLICT).and().assertThat().body("message", equalTo("Этот логин уже используется"));
     }
 
     //если создать пользователя с логином, который уже есть, возвращается ошибка
@@ -59,14 +51,13 @@ public class CourierCreateTest {
         Courier courier2 = CourierGenerator.fullRandom();
         courier2.setLogin(courier1.getLogin());
         //Act
-        CourierClient.create(courier1);
-        CourierClient.create(courier2).then()
+        if (CourierClient.createCourier(courier1).statusCode() == SC_CREATED) {
+            setCourierToDelete(courier1);
+        }
+        CourierClient.createCourier(courier2).then()
                 //Assert
-                .statusCode(409).and().assertThat().body("message", equalTo("Этот логин уже используется"));
+                .statusCode(SC_CONFLICT).and().assertThat().body("message", equalTo("Этот логин уже используется"));
 
-        Response response = CourierClient.login(courier1);
-        CourierId id = response.body().as(CourierId.class);
-        CourierClient.delete(id.getId());
     }
 
 
@@ -77,13 +68,13 @@ public class CourierCreateTest {
         //Arrange
         Courier courier = CourierGenerator.fullRandom();
         //Act
-        CourierClient.create(courier).then()
-               //Assert
-                .statusCode(201);
+        Response response = CourierClient.createCourier(courier);
+        if (response.statusCode() == SC_CREATED) {
+            setCourierToDelete(courier);
+        }
 
-        Response response = CourierClient.login(courier);
-        CourierId id = response.body().as(CourierId.class);
-        CourierClient.delete(id.getId());
+        //Assert
+        response.then().statusCode(SC_CREATED);
     }
 
 
@@ -94,13 +85,13 @@ public class CourierCreateTest {
         //Arrange
         Courier courier = CourierGenerator.fullRandom();
         //Act
-        CourierClient.create(courier).then()
-                //Assert
-                .assertThat().body("ok",equalTo(true));
+        Response response = CourierClient.createCourier(courier);
+        if (response.statusCode() == SC_CREATED) {
+            setCourierToDelete(courier);
+        }
+        //Assert
+         response.then().assertThat().body("ok",equalTo(true));
 
-        Response response = CourierClient.login(courier);
-        CourierId id = response.body().as(CourierId.class);
-        CourierClient.delete(id.getId());
     }
 
 

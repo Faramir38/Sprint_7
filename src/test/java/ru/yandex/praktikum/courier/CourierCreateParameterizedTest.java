@@ -1,19 +1,19 @@
 package ru.yandex.praktikum.courier;
 
 import io.qameta.allure.junit4.DisplayName;
-import io.restassured.RestAssured;
+import io.restassured.response.Response;
 import net.datafaker.Faker;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import ru.yandex.praktikum.SamokatConst;
 
 
+import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
+import static org.apache.http.HttpStatus.SC_CREATED;
 import static org.hamcrest.CoreMatchers.equalTo;
 
 @RunWith(Parameterized.class)
-public class CourierCreateParameterizedTest {
+public class CourierCreateParameterizedTest extends CourierBaseTest{
 
     private final String login;
     private final String password;
@@ -46,10 +46,6 @@ public class CourierCreateParameterizedTest {
         };
     }
 
-    @Before
-    public void setUp() {
-        RestAssured.baseURI = SamokatConst.SAMOKAT_URL;
-    }
 
     //чтобы создать курьера, нужно передать в ручку все обязательные поля,
     // если одного из полей нет, запрос возвращает ошибку
@@ -59,9 +55,13 @@ public class CourierCreateParameterizedTest {
         //Arrange
         Courier courier = new Courier(login, password, firstName);
         //Act
-        CourierClient.create(courier).then()
-                //Assert
-                .statusCode(400).and().assertThat()
+        Response response = CourierClient.createCourier(courier);
+        if (response.statusCode() == SC_CREATED) {
+            setCourierToDelete(courier);
+        }
+
+        //Assert
+         response.then().statusCode(SC_BAD_REQUEST).and().assertThat()
                 .body("message", equalTo("Недостаточно данных для создания учетной записи"));
     }
 

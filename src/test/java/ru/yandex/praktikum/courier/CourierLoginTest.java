@@ -1,23 +1,16 @@
 package ru.yandex.praktikum.courier;
 
 import io.qameta.allure.junit4.DisplayName;
-import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import net.datafaker.Faker;
-import org.junit.Before;
 import org.junit.Test;
-import ru.yandex.praktikum.SamokatConst;
 
 
+import static org.apache.http.HttpStatus.*;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 
-public class CourierLoginTest {
-
-    @Before
-    public void setUp() {
-        RestAssured.baseURI = SamokatConst.SAMOKAT_URL;
-    }
+public class CourierLoginTest extends CourierBaseTest {
 
 //    курьер может авторизоваться;
     @Test
@@ -25,15 +18,17 @@ public class CourierLoginTest {
     public void loginReturns200WhenSuccessful() {
         //Arrange
         Courier courier = CourierGenerator.fullRandom();
-        CourierClient.create(courier);
+        Response response_del = CourierClient.createCourier(courier);
+        if (response_del.statusCode() == SC_CREATED) {
+            setCourierToDelete(courier);
+        }
+
         CourierLogin courierLogin = new CourierLogin(courier);
         //Act
-        Response response = CourierClient.login(courierLogin);
+        Response response = CourierClient.loginCourier(courierLogin);
         //Assert
-        response.then().statusCode(200);
+        response.then().statusCode(SC_OK);
 
-        CourierId id = response.body().as(CourierId.class);
-        CourierClient.delete(id.getId());
 
     }
 
@@ -43,15 +38,16 @@ public class CourierLoginTest {
     public void loginReturnsIdWhenSuccessful() {
         //Arrange
         Courier courier = CourierGenerator.fullRandom();
-        CourierClient.create(courier);
+        Response response_del = CourierClient.createCourier(courier);
+        if (response_del.statusCode() == SC_CREATED) {
+            setCourierToDelete(courier);
+        }
         CourierLogin courierLogin = new CourierLogin(courier);
         //Act
-        Response response = CourierClient.login(courierLogin);
+        Response response = CourierClient.loginCourier(courierLogin);
         //Assert
         response.then().assertThat().body("id", notNullValue());
 
-        CourierId id = response.body().as(CourierId.class);
-        CourierClient.delete(id.getId());
     }
 
 //    если авторизоваться под несуществующим пользователем, запрос возвращает ошибку;
@@ -62,9 +58,9 @@ public class CourierLoginTest {
         Courier courier = CourierGenerator.fullRandom();
         CourierLogin courierLogin = new CourierLogin(courier);
         //Act
-        CourierClient.login(courierLogin).then()
+        CourierClient.loginCourier(courierLogin).then()
                 //Assert
-                .statusCode(404).and().assertThat().body("message", equalTo("Учетная запись не найдена"));
+                .statusCode(SC_NOT_FOUND).and().assertThat().body("message", equalTo("Учетная запись не найдена"));
 
     }
 
@@ -75,17 +71,18 @@ public class CourierLoginTest {
         //Arrange
         Faker faker = new Faker();
         Courier courier = CourierGenerator.fullRandom();
-        CourierClient.create(courier);
+        Response response = CourierClient.createCourier(courier);
+        if (response.statusCode() == SC_CREATED) {
+            setCourierToDelete(courier);
+        }
+
         CourierLogin courierLogin = new CourierLogin(courier);
         courierLogin.setLogin(faker.text()
                 .text(4, 6,true, false, false));
         //Act
-        CourierClient.login(courierLogin)
+        CourierClient.loginCourier(courierLogin)
         //Assert
-            .then().statusCode(404).and().assertThat().body("message", equalTo("Учетная запись не найдена"));
-
-        CourierId id = CourierClient.login(courier).body().as(CourierId.class);
-        CourierClient.delete(id.getId());
+            .then().statusCode(SC_NOT_FOUND).and().assertThat().body("message", equalTo("Учетная запись не найдена"));
 
     }
 
@@ -95,17 +92,18 @@ public class CourierLoginTest {
         //Arrange
         Faker faker = new Faker();
         Courier courier = CourierGenerator.fullRandom();
-        CourierClient.create(courier);
+        Response response = CourierClient.createCourier(courier);
+        if (response.statusCode() == SC_CREATED) {
+            setCourierToDelete(courier);
+        }
         CourierLogin courierLogin = new CourierLogin(courier);
         courierLogin.setPassword(faker.text()
                 .text(4, 6,true, false, true));
         //Act
-        CourierClient.login(courierLogin)
+        CourierClient.loginCourier(courierLogin)
         //Assert
-            .then().statusCode(404).and().assertThat().body("message", equalTo("Учетная запись не найдена"));
+            .then().statusCode(SC_NOT_FOUND).and().assertThat().body("message", equalTo("Учетная запись не найдена"));
 
-        CourierId id = CourierClient.login(courier).body().as(CourierId.class);
-        CourierClient.delete(id.getId());
 
     }
 

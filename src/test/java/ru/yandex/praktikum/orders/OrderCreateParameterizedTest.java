@@ -1,13 +1,11 @@
 package ru.yandex.praktikum.orders;
 
 import io.qameta.allure.junit4.DisplayName;
-import io.restassured.RestAssured;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import ru.yandex.praktikum.SamokatConst;
 
+import static org.apache.http.HttpStatus.SC_CREATED;
 import static org.hamcrest.CoreMatchers.notNullValue;
 
 @RunWith(Parameterized.class)
@@ -29,11 +27,6 @@ public class OrderCreateParameterizedTest {
         };
     }
 
-    @Before
-    public void setUp() {
-        RestAssured.baseURI = SamokatConst.SAMOKAT_URL;
-    }
-
 //можно указать один из цветов — BLACK или GREY;
 //можно указать оба цвета;
 //можно совсем не указывать цвет;
@@ -45,9 +38,9 @@ public class OrderCreateParameterizedTest {
         String[] colorArray = color.split(",");
         order.setColor(colorArray);
         //Act
-        OrdersClient.create(order).then()
+        OrdersClient.createOrder(order).then()
                 //Assert
-                .statusCode(201).and().assertThat().body("track", notNullValue());
+                .statusCode(SC_CREATED).and().assertThat().body("track", notNullValue());
     }
 
 

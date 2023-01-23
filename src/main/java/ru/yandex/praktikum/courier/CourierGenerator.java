@@ -1,10 +1,12 @@
 package ru.yandex.praktikum.courier;
 
+import io.qameta.allure.Step;
 import net.datafaker.Faker;
 
 public class CourierGenerator {
     //создание случайного курьера
 
+    @Step ("Создание случаных данных курьера")
     public static Courier fullRandom() {
         Faker faker = new Faker();
 

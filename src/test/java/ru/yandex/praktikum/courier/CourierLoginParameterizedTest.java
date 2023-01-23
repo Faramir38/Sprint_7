@@ -1,20 +1,21 @@
 package ru.yandex.praktikum.courier;
 
 import io.qameta.allure.junit4.DisplayName;
-import io.restassured.RestAssured;
-import org.junit.Before;
+import io.restassured.response.Response;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import ru.yandex.praktikum.SamokatConst;
 
 
+import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
+import static org.apache.http.HttpStatus.SC_CREATED;
 import static org.hamcrest.CoreMatchers.equalTo;
 
 @RunWith(Parameterized.class)
-public class CourierLoginParameterizedTest {
+public class CourierLoginParameterizedTest extends CourierBaseTest{
     private final String login;
     private final String password;
+
 
     public CourierLoginParameterizedTest(String login, String password) {
         this.login = login;
@@ -31,10 +32,6 @@ public class CourierLoginParameterizedTest {
         };
     }
 
-    @Before
-    public void setUp() {
-        RestAssured.baseURI = SamokatConst.SAMOKAT_URL;
-    }
 
 //    для авторизации нужно передать все обязательные поля;
 //    если какого-то поля нет, запрос возвращает ошибку;
@@ -57,14 +54,15 @@ public class CourierLoginParameterizedTest {
             courierLogin.setPassword(login);
         }
 
-        CourierClient.create(courier);
-        //Act
-        CourierClient.login(courierLogin).then()
-                //Assert
-                .statusCode(400).and().assertThat().body("message", equalTo("Недостаточно данных для входа"));
+        Response response = CourierClient.createCourier(courier);
+        if (response.statusCode() == SC_CREATED) {
+            setCourierToDelete(courier);
+        }
 
-        CourierId id = CourierClient.login(courier).body().as(CourierId.class);
-        CourierClient.delete(id.getId());
+        //Act
+        CourierClient.loginCourier(courierLogin).then()
+                //Assert
+                .statusCode(SC_BAD_REQUEST).and().assertThat().body("message", equalTo("Недостаточно данных для входа"));
 
     }
 

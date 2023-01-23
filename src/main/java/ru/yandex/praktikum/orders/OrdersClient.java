@@ -1,26 +1,31 @@
 package ru.yandex.praktikum.orders;
 
+import io.qameta.allure.Step;
 import io.restassured.response.Response;
+import ru.yandex.praktikum.BaseClient;
+import ru.yandex.praktikum.SamokatConst;
 
 import static io.restassured.RestAssured.given;
 
 //реализация взаимодействия с Orders
-public class OrdersClient {
+public class OrdersClient extends BaseClient {
 
     //создание заказа
-    public static Response create(Order order) {
-        return given()
+    @Step ("Создание заказа (POST /api/v1/orders)")
+    public static Response createOrder(Order order) {
+        return given(requestSpecification)
                 .header("Content-type", "application/json")
                 .and()
                 .body(order)
                 .when()
-                .post("/api/v1/orders");
+                .post(SamokatConst.SAMOKAT_API_ORDERS);
     }
 
 
     //запрос списка заказов
+    @Step ("Запрос списка заказов (GET /api/v1/orders)")
     public static Response ordersListWithoutParams() {
-        return given()
-                .get("/api/v1/orders");
+        return given(requestSpecification)
+                .get(SamokatConst.SAMOKAT_API_ORDERS);
     }
 }

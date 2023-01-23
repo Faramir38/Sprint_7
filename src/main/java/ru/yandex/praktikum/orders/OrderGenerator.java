@@ -1,10 +1,12 @@
 package ru.yandex.praktikum.orders;
 
+import io.qameta.allure.Step;
 import net.datafaker.Faker;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class OrderGenerator {
+    @Step ("Создание случайных данных заказа")
     public static Order random() {
         Faker faker = new Faker();
         List<String> colorList =

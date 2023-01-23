@@ -1,20 +1,13 @@
 package ru.yandex.praktikum.orders;
 
 import io.qameta.allure.junit4.DisplayName;
-import io.restassured.RestAssured;
-import org.junit.Before;
 import org.junit.Test;
-import ru.yandex.praktikum.SamokatConst;
 
 
+import static org.apache.http.HttpStatus.SC_OK;
 import static org.hamcrest.CoreMatchers.notNullValue;
 
 public class OrdersListTest {
-
-    @Before
-    public void setUp() {
-        RestAssured.baseURI = SamokatConst.SAMOKAT_URL;
-    }
 
 //    Проверь, что в тело ответа возвращается список заказов
     @Test
@@ -24,7 +17,7 @@ public class OrdersListTest {
         //Act
         OrdersClient.ordersListWithoutParams().then()
                 //Assert
-                .statusCode(200).and().assertThat().body("orders", notNullValue());
+                .statusCode(SC_OK).and().assertThat().body("orders", notNullValue());
 
     }
 
